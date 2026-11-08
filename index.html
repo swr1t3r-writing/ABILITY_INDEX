@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-black">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VITA MACHINA - SPELL CATALOG TERMINAL</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font - Share Tech Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        term: {
+                            bg: '#01080d',
+                            dark: '#08141f',
+                            cyan: '#06b6d4',
+                            bright: '#22d3ee',
+                            glow: '#38bdf8',
+                            amber: '#fde047',
+                            alert: '#f43f5e',
+                            dim: '#164e63'
+                        }
+                    },
+                    fontFamily: {
+                        mono: ['"Share Tech Mono"', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .crt-screen {
+            background: radial-gradient(circle at center, rgba(6, 182, 212, 0.08) 0%, rgba(1, 8, 13, 0.95) 100%), #01080d;
+            box-shadow: inset 0 0 80px rgba(56, 189, 248, 0.15);
+            text-shadow: 0 0 6px rgba(34, 211, 238, 0.5);
+        }
+        .crt-scanline {
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.35));
+            background-size: 100% 4px;
+        }
+        .crt-flicker { animation: flicker 0.18s infinite; }
+        @keyframes flicker { 0% { opacity: 0.97; } 50% { opacity: 1; } 100% { opacity: 0.98; } }
+        .blinking-cursor {
+            display: inline-block; width: 8px; height: 18px; background-color: #22d3ee;
+            box-shadow: 0 0 8px #38bdf8; animation: blink 1s step-end infinite; vertical-align: middle; margin-left: 2px;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #01080d; border-left: 1px solid #164e63; }
+        ::-webkit-scrollbar-thumb { background: #164e63; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
+        .neon-btn { transition: all 0.2s ease; box-shadow: 0 0 10px rgba(6, 182, 212, 0.25); }
+        .neon-btn:hover { box-shadow: 0 0 18px rgba(34, 211, 238, 0.6); transform: translateY(-1px); }
+        .spell-card { transition: all 0.2s ease; }
+        .spell-card:hover { border-color: #22d3ee; box-shadow: 0 0 15px rgba(6, 182, 212, 0.2); }
+    </style>
+</head>
+<body class="h-full bg-black text-term-bright font-mono selection:bg-term-cyan selection:text-black flex flex-col justify-between overflow-hidden crt-flicker">
+
+    <div class="pointer-events-none fixed inset-0 z-40 crt-scanline opacity-50"></div>
+    <div class="pointer-events-none fixed inset-0 z-40 bg-gradient-to-t from-black/40 via-transparent to-black/40"></div>
+
+    <div class="relative z-10 flex flex-col h-full max-w-6xl mx-auto w-full p-3 sm:p-5 md:p-6 crt-screen border border-term-dim rounded-lg shadow-2xl my-auto">
+        
+        <header class="border-b border-term-dim pb-3 mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="w-3 h-3 rounded-full bg-term-bright animate-ping"></div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold tracking-wider text-term-glow flex items-center gap-2">
+                        <i class="fa-solid fa-book-skull text-term-cyan"></i> VITA MACHINA — ARCANE GRIMOIRE
+                    </h1>
+                    <p class="text-xs text-term-cyan/70">EXTERNAL JSON DATA PIPELINE v1.0</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3 text-xs flex-wrap">
+                <div class="flex items-center bg-term-dark border border-term-dim rounded px-2.5 py-1 focus-within:border-term-cyan">
+                    <i class="fa-solid fa-magnifying-glass text-term-cyan mr-2"></i>
+                    <input type="text" id="search-input" placeholder="Search spells..." class="bg-transparent text-term-glow focus:outline-none placeholder-term-dim text-xs w-28 sm:w-44">
+                </div>
+
+                <select id="school-filter" class="bg-term-dark border border-term-dim text-term-glow px-2 py-1 rounded focus:outline-none focus:border-term-cyan">
+                    <option value="ALL">ALL SCHOOLS</option>
+                    <option value="Elemental">Elemental</option>
+                    <option value="Enchantment">Enchantment</option>
+                    <option value="Invocation">Invocation</option>
+                    <option value="Transmutation">Transmutation</option>
+                    <option value="Conjuration">Conjuration</option>
+                    <option value="Evocation">Evocation</option>
+                    <option value="Necromancy">Necromancy</option>
+                </select>
+
+                <button id="audio-toggle-btn" class="bg-term-dark hover:bg-term-dim text-term-bright border border-term-dim px-2.5 py-1 rounded flex items-center gap-1.5 transition">
+                    <i id="audio-icon" class="fa-solid fa-volume-high text-term-cyan"></i>
+                    <span id="audio-label" class="hidden sm:inline">AUDIO ON</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto pr-1 space-y-4 mb-4">
+            <div id="spell-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                <!-- Injected dynamically via JS fetch -->
+            </div>
+            <div id="no-results" class="hidden text-center py-12 text-term-cyan/60">
+                <i class="fa-solid fa-triangle-exclamation text-2xl mb-2 text-term-alert"></i>
+                <p>NO MATCHING ARCANE SIGNATURES FOUND IN REGISTRY.</p>
+            </div>
+        </main>
+
+        <footer class="border-t border-term-dim pt-3 text-xs flex justify-between items-center text-term-cyan/60">
+            <span>DATABASE STATUS: <span id="db-status" class="text-term-bright font-bold">LOADING...</span></span>
+            <span id="spell-count-indicator">LOADED: 0 SPELLS</span>
+        </footer>
+    </div>
+
+    <!-- MODAL -->
+    <div id="spell-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-term-dark border-2 border-term-cyan w-full max-w-xl rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-term-bg border-b border-term-dim p-4 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-microchip text-term-amber"></i>
+                    <h2 id="modal-spell-name" class="text-base sm:text-lg font-bold text-term-glow uppercase">SPELL NAME</h2>
+                </div>
+                <button id="close-modal-btn" class="text-term-bright hover:text-term-alert text-xl px-2 transition"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs sm:text-sm flex-1">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-term-bg p-3 rounded border border-term-dim text-xs">
+                    <div><span class="text-term-cyan/60 block">SCHOOL:</span><span id="modal-spell-school" class="font-bold text-term-glow">--</span></div>
+                    <div><span class="text-term-cyan/60 block">TIER:</span><span id="modal-spell-tier" class="font-bold text-term-amber">--</span></div>
+                    <div><span class="text-term-cyan/60 block">COST:</span><span id="modal-spell-cost" class="font-bold text-term-bright">--</span></div>
+                    <div><span class="text-term-cyan/60 block">RANGE:</span><span id="modal-spell-range" class="font-bold text-term-bright">--</span></div>
+                </div>
+
+                <div class="space-y-1">
+                    <span class="text-xs text-term-cyan/70 font-bold block">DESCRIPTION:</span>
+                    <p id="modal-spell-desc" class="text-term-bright leading-relaxed bg-term-bg p-3 rounded border border-term-dim"></p>
+                </div>
+
+                <div id="modal-overcharge-container" class="space-y-1">
+                    <span class="text-xs text-term-amber font-bold block"><i class="fa-solid fa-bolt"></i> OVERCHARGED EFFECT:</span>
+                    <p id="modal-spell-overcharge" class="text-term-amber bg-term-bg p-3 rounded border border-term-dim/60"></p>
+                </div>
+            </div>
+
+            <div class="bg-term-bg border-t border-term-dim p-3 flex justify-end">
+                <button id="done-modal-btn" class="neon-btn bg-term-cyan text-black font-bold px-5 py-1.5 rounded text-xs transition uppercase">CLOSE RECORD</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT WITH FETCH LOGIC -->
+    <script>
+        let spellCatalog = [];
+        let audioEnabled = true;
+
+        class TerminalAudioEngine {
+            constructor() { this.ctx = null; }
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+            }
+            playKeyBeep() {
+                if (!audioEnabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440 + Math.random() * 100, now);
+                osc.frequency.exponentialRampToValueAtTime(220, now + 0.04);
+                gain.gain.setValueAtTime(0.04, now);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.04);
+            }
+            playClick() {
+                if (!audioEnabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(150, now + 0.05);
+                gain.gain.setValueAtTime(0.06, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            }
+        }
+
+        const audio = new TerminalAudioEngine();
+
+        // FETCH JSON DATA FROM codes.json
+        async function loadSpellData() {
+            try {
+                const response = await fetch('data/codes.json');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                spellCatalog = await response.json();
+                
+                document.getElementById('db-status').textContent = 'ONLINE [SYNCED]';
+                renderSpells();
+            } catch (error) {
+                console.error('Failed to load codes.json:', error);
+                document.getElementById('db-status').textContent = 'ERROR [JSON LOAD FAILED]';
+                document.getElementById('spell-grid').innerHTML = `
+                    <div class="col-span-full text-center text-term-alert py-8">
+                        <i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i>
+                        <p>FAILED TO LOAD <code class="text-term-amber">data/codes.json</code></p>
+                        <p class="text-xs text-term-cyan/60 mt-1">Note: Browsers block local file fetches via file:// due to CORS security. Try running this via a local server (e.g., VS Code Live Server) or GitHub Pages.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderSpells() {
+            const grid = document.getElementById('spell-grid');
+            const noResults = document.getElementById('no-results');
+            const searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
+            const schoolQuery = document.getElementById('school-filter').value;
+
+            const filtered = spellCatalog.filter(spell => {
+                const matchesSearch = spell.name.toLowerCase().includes(searchQuery) || 
+                                      spell.description.toLowerCase().includes(searchQuery) ||
+                                      spell.school.toLowerCase().includes(searchQuery);
+                const matchesSchool = schoolQuery === 'ALL' || spell.school === schoolQuery;
+                return matchesSearch && matchesSchool;
+            });
+
+            document.getElementById('spell-count-indicator').textContent = `LOADED: ${filtered.length} / ${spellCatalog.length} SPELLS`;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                noResults.classList.remove('hidden');
+                return;
+            }
+
+            noResults.classList.add('hidden');
+            grid.innerHTML = filtered.map(spell => `
+                <div class="spell-card bg-term-dark border border-term-dim rounded p-3 sm:p-4 flex flex-col justify-between cursor-pointer group" onclick="openSpellModal('${spell.id}')">
+                    <div>
+                        <div class="flex justify-between items-start gap-2 mb-2">
+                            <span class="text-xs bg-term-dim/60 text-term-bright px-2 py-0.5 rounded font-bold">${escapeHtml(spell.school)}</span>
+                            <span class="text-xs text-term-amber font-mono">T${spell.tier}</span>
+                        </div>
+                        <h3 class="font-bold text-base text-term-glow group-hover:text-term-bright transition mb-1">${escapeHtml(spell.name)}</h3>
+                        <p class="text-xs text-term-bright/80 line-clamp-2 leading-relaxed mb-3">${escapeHtml(spell.description)}</p>
+                    </div>
+                    <div class="border-t border-term-dim/60 pt-2 flex justify-between items-center text-xs text-term-cyan/80 font-mono">
+                        <span>COST: <strong class="text-term-bright">${spell.cost}</strong></span>
+                        <span class="group-hover:translate-x-1 transition transform text-term-cyan"><i class="fa-solid fa-terminal"></i> INSPECT</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openSpellModal(id) {
+            audio.playClick();
+            const spell = spellCatalog.find(s => s.id === id);
+            if (!spell) return;
+
+            document.getElementById('modal-spell-name').textContent = spell.name;
+            document.getElementById('modal-spell-school').textContent = spell.school;
+            document.getElementById('modal-spell-tier').textContent = `Tier ${spell.tier}`;
+            document.getElementById('modal-spell-cost').textContent = spell.cost;
+            document.getElementById('modal-spell-range').textContent = spell.range;
+            document.getElementById('modal-spell-desc').textContent = spell.description;
+
+            const overchargeBox = document.getElementById('modal-overcharge-container');
+            if (spell.overcharged) {
+                overchargeBox.classList.remove('hidden');
+                document.getElementById('modal-spell-overcharge').textContent = spell.overcharged;
+            } else {
+                overchargeBox.classList.add('hidden');
+            }
+
+            document.getElementById('spell-modal').classList.remove('hidden');
+        }
+
+        function closeSpellModal() {
+            audio.playClick();
+            document.getElementById('spell-modal').classList.add('hidden');
+        }
+
+        function escapeHtml(str) {
+            return String(str || '').replace(/[&<>"']/g, (m) => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[m]);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSpellData();
+
+            document.getElementById('search-input').addEventListener('input', () => {
+                audio.playKeyBeep();
+                renderSpells();
+            });
+
+            document.getElementById('school-filter').addEventListener('change', () => {
+                audio.playClick();
+                renderSpells();
+            });
+
+            document.getElementById('audio-toggle-btn').addEventListener('click', () => {
+                audioEnabled = !audioEnabled;
+                const icon = document.getElementById('audio-icon');
+                const label = document.getElementById('audio-label');
+                if (audioEnabled) {
+                    icon.className = 'fa-solid fa-volume-high text-term-cyan';
+                    label.textContent = 'AUDIO ON';
+                } else {
+                    icon.className = 'fa-solid fa-volume-xmark text-term-alert';
+                    label.textContent = 'AUDIO OFF';
+                }
+            });
+
+            document.getElementById('close-modal-btn').addEventListener('click', closeSpellModal);
+            document.getElementById('done-modal-btn').addEventListener('click', closeSpellModal);
+            document.getElementById('spell-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'spell-modal') closeSpellModal();
+            });
+        });
+    </script>
+</body>
+</html>
