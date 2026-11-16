@@ -103,9 +103,9 @@
     "description": "Conjure and hurl a magical stone to distract or strike targets.",
     "overcharged": "Deals 1d6 force damage."
   },
-    {
+  {
     "id": "fire-bolt",
-    "name": "Fire Bold",
+    "name": "Fire Bolt",
     "school": "Elemental",
     "tier": 1,
     "cost": "5",
@@ -114,6 +114,6 @@
     "action": "n/a",
     "duration": "2 Turns",
     "description": "Launch a bolt of fire that deals 1d6 of Burning Damage within a 1m Range.",
-    "overcharged": "Deals 2d8 Burning Damage within a 3m Range."
+    "overcharged": "Deals 1d10 Burning Damage within a 3m Range."
   }
 ]
