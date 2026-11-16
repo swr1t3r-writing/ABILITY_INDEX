@@ -31,7 +31,7 @@
     "school": "Invocation",
     "tier": 1,
     "cost": 5,
-    "range": "n/a",
+    "range": "2m",
     "stack": "n/a",
     "action": "n/a",
     "duration": "n/a",
@@ -87,7 +87,7 @@
     "stack": "n/a",
     "action": "n/a",
     "duration": "n/a",
-    "description": "Regenerate 1 additional Mana each turn.",
+    "description": "Reduce Dread by 1 for every turn.",
     "overcharged": null
   },
   {
