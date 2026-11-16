@@ -108,7 +108,7 @@
     "name": "Fire Bolt",
     "school": "Elemental",
     "tier": 1,
-    "cost": "5",
+    "cost": 5,
     "range": "10m",
     "stack": "n/a",
     "action": "n/a",
